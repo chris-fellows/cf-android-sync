@@ -1,43 +1,39 @@
 ﻿using CFAndroidSync.Interfaces;
 using CFAndroidSync.Models;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Windows.Forms.LinkLabel;
 
 namespace CFAndroidSync.Services
 {
     /// <summary>
     /// Android file system via adb.exe
     /// </summary>
-    public class ADBAndroidFileSystem : IAndroidFileSystem
+    public class ADBAndroidFileSystem : IPhoneFileSystem
     {
         // TODO: Remove this
         private string _adbPathToEXE = "C:\\Program Files (x86)\\Android\\android-sdk\\platform-tools";
 
+        private ProcessStartInfo CreateProcessStartInfo(string arguments)
+        {
+            return new ProcessStartInfo()
+            {
+                WindowStyle = ProcessWindowStyle.Hidden,
+                FileName = Path.Combine(_adbPathToEXE, "adb.exe"),
+                // -L : Follows symolic links. E.g. sdcard is a symbolic link
+                // -p : Adds a / at the end of folder names
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+        }
+
         public List<FolderDetails> GetFolders(string folder)
         {
-            var folders = new List<FolderDetails>();
-            Char quotes = '"';
+            var folders = new List<FolderDetails>();            
 
             using (var process = new Process())
             {
-                process.StartInfo = new ProcessStartInfo()
-                {
-                    WindowStyle = ProcessWindowStyle.Hidden,                    
-                    FileName = Path.Combine(_adbPathToEXE, "adb.exe"),
-                    // -L : Follows symolic links. E.g. sdcard is a symbolic link
-                    // -p : Adds a / at the end of folder names
-
-                    Arguments = $"shell ls -L -p {quotes}{folder}{quotes}",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-                               
+                process.StartInfo = CreateProcessStartInfo($"shell ls -L -p '{folder}'");              
                 process.Start();
                 process.WaitForExit();                
 
@@ -84,10 +80,12 @@ namespace CFAndroidSync.Services
         public List<FileDetails> GetFiles(string folder)
         {
             var files = new List<FileDetails>();
-            Char quotes = '"';
-
+            
             using (var process = new Process())
             {
+                process.StartInfo = CreateProcessStartInfo($"shell ls -L -p -a '{folder}'");
+
+                /*
                 process.StartInfo = new ProcessStartInfo()
                 {
                     WindowStyle = ProcessWindowStyle.Hidden,
@@ -102,6 +100,7 @@ namespace CFAndroidSync.Services
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 };
+                */
                 
                 process.Start();
                 process.WaitForExit();
@@ -143,20 +142,10 @@ namespace CFAndroidSync.Services
         }
 
         public void CopyLocalFileTo(string localFile, string remoteFile)
-        {            
-            Char quotes = '"';
+        {                        
             using (var process = new Process())
             {
-                process.StartInfo = new ProcessStartInfo()
-                {
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    FileName = Path.Combine(_adbPathToEXE, "adb.exe"),                    
-                    Arguments = $"push {quotes}{localFile}{quotes} {quotes}{remoteFile}{quotes}",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-
+                process.StartInfo = CreateProcessStartInfo($"push '{localFile}' '{remoteFile}'");
                 process.Start();
                 process.WaitForExit();
 
@@ -187,7 +176,6 @@ namespace CFAndroidSync.Services
             foreach(var localFile in localFiles)
             {
                 var remoteFile = $"{remoteFolder}/{Path.GetFileName(localFile)}";
-
                 CopyLocalFileTo(localFile, remoteFile);
             }
 
@@ -197,6 +185,121 @@ namespace CFAndroidSync.Services
                 var remoteSubFolder = $"{remoteFolder}/{subFolderName}";
 
                 CopyLocalFolderTo(localSubFolder, remoteSubFolder);
+            }
+        }
+
+        public void CopyFileFrom(string remoteFile, string localFile)
+        {
+            var localFolder = Path.GetDirectoryName(localFile);
+            Directory.CreateDirectory(localFolder);
+
+            Char quotes = '"';
+            using (var process = new Process())
+            {
+                process.StartInfo = CreateProcessStartInfo($"pull {quotes}{remoteFile}{quotes} {quotes}{localFolder}{quotes}");
+
+                process.Start();
+                process.WaitForExit();
+
+                // Synchronously read the standard output of the spawned process.
+                StreamReader readerOutput = process.StandardOutput;
+                StreamReader readerError = process.StandardError;
+
+                // Process errors
+                while (!readerError.EndOfStream)
+                {
+                    var line = readerError.ReadLine();
+                    MessageBox.Show($"Error={line}");
+                    int xxx1 = 1000;
+                }
+
+                // Process output
+                while (!readerOutput.EndOfStream)
+                {
+                    var line = readerOutput.ReadLine();
+                    int xxx = 1000;
+                }
+            }
+        }
+
+        public void CopyFolderFrom(string remoteFolder, string localFolder)
+        {
+            var folderName = remoteFolder.Split('/').Last();
+
+            // Copy files
+            var remoteFiles = GetFiles(remoteFolder);
+            foreach(var currentRemoteFile in remoteFiles)
+            {
+                var localFile = Path.Combine(localFolder, folderName);
+                CopyFileFrom(currentRemoteFile.Path, localFile);
+            }
+
+            // Copy sub-folders
+            var remoteFolders = GetFolders(remoteFolder);
+            foreach(var remoteSubFolder in remoteFolders)
+            {
+                var localSubFolder = Path.Combine(localFolder, remoteSubFolder.Name);
+                CopyFolderFrom(remoteSubFolder.Path, localSubFolder);
+            }
+        }
+
+        public void DeleteFile(string file)
+        {            
+            using (var process = new Process())
+            {
+                process.StartInfo = CreateProcessStartInfo($"shell rm -f '{file}'");
+                
+                process.Start();
+                process.WaitForExit();
+
+                // Synchronously read the standard output of the spawned process.
+                StreamReader readerOutput = process.StandardOutput;
+                StreamReader readerError = process.StandardError;
+
+                // Process errors
+                while (!readerError.EndOfStream)
+                {
+                    var line = readerError.ReadLine();
+                    MessageBox.Show($"Error={line}");
+                    int xxx1 = 1000;
+                }
+
+                // Process output
+                while (!readerOutput.EndOfStream)
+                {
+                    var line = readerOutput.ReadLine();
+                    int xxx = 1000;
+                }
+            }
+        }
+
+        public void DeleteFolder(string folder)
+        {
+            using (var process = new Process())
+            {
+                // -rR : Remove recursively
+                process.StartInfo = CreateProcessStartInfo($"shell rm -rR '{folder}'");  
+                process.Start();
+                process.WaitForExit();
+
+                // Synchronously read the standard output of the spawned process.
+                StreamReader readerOutput = process.StandardOutput;
+                StreamReader readerError = process.StandardError;
+
+                // Process errors
+                while (!readerError.EndOfStream)
+                {
+                    var line = readerError.ReadLine();
+                    MessageBox.Show($"Error={line}");
+                    int xxx1 = 1000;
+                }
+
+                // Process output
+                while (!readerOutput.EndOfStream)
+                {
+                    var line = readerOutput.ReadLine();
+                    int xxx = 1000;
+                }
             }
         }
     }

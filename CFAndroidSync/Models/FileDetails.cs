@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CFAndroidSync.Models
+﻿namespace CFAndroidSync.Models
 {
+    /// <summary>
+    /// File details
+    /// </summary>
     public class FileDetails : FileSystemItem
     {
       

@@ -30,6 +30,7 @@
         {
             components = new System.ComponentModel.Container();
             toolStrip1 = new ToolStrip();
+            toolStripLabel1 = new ToolStripLabel();
             tscCategory = new ToolStripComboBox();
             statusStrip1 = new StatusStrip();
             tssStatus = new ToolStripStatusLabel();
@@ -38,6 +39,8 @@
             cmsFolder = new ContextMenuStrip(components);
             copyLocalFilesToFolderToolStripMenuItem = new ToolStripMenuItem();
             copyLocalFolderToToolStripMenuItem = new ToolStripMenuItem();
+            copyFolderToLocalFolderToolStripMenuItem = new ToolStripMenuItem();
+            deleteFolderToolStripMenuItem = new ToolStripMenuItem();
             toolStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
@@ -48,18 +51,24 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new ToolStripItem[] { tscCategory });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel1, tscCategory });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(1245, 25);
             toolStrip1.TabIndex = 0;
             toolStrip1.Text = "toolStrip1";
             // 
+            // toolStripLabel1
+            // 
+            toolStripLabel1.Name = "toolStripLabel1";
+            toolStripLabel1.Size = new Size(74, 22);
+            toolStripLabel1.Text = "Component:";
+            // 
             // tscCategory
             // 
             tscCategory.DropDownStyle = ComboBoxStyle.DropDownList;
             tscCategory.Name = "tscCategory";
-            tscCategory.Size = new Size(121, 25);
+            tscCategory.Size = new Size(200, 25);
             tscCategory.SelectedIndexChanged += tscCategory_SelectedIndexChanged;
             // 
             // statusStrip1
@@ -103,23 +112,37 @@
             // 
             // cmsFolder
             // 
-            cmsFolder.Items.AddRange(new ToolStripItem[] { copyLocalFilesToFolderToolStripMenuItem, copyLocalFolderToToolStripMenuItem });
+            cmsFolder.Items.AddRange(new ToolStripItem[] { copyLocalFilesToFolderToolStripMenuItem, copyLocalFolderToToolStripMenuItem, copyFolderToLocalFolderToolStripMenuItem, deleteFolderToolStripMenuItem });
             cmsFolder.Name = "cmsFolder";
-            cmsFolder.Size = new Size(188, 70);
+            cmsFolder.Size = new Size(213, 114);
             // 
             // copyLocalFilesToFolderToolStripMenuItem
             // 
             copyLocalFilesToFolderToolStripMenuItem.Name = "copyLocalFilesToFolderToolStripMenuItem";
-            copyLocalFilesToFolderToolStripMenuItem.Size = new Size(187, 22);
+            copyLocalFilesToFolderToolStripMenuItem.Size = new Size(212, 22);
             copyLocalFilesToFolderToolStripMenuItem.Text = "Copy local files to...";
             copyLocalFilesToFolderToolStripMenuItem.Click += copyLocalFilesToFolderToolStripMenuItem_Click;
             // 
             // copyLocalFolderToToolStripMenuItem
             // 
             copyLocalFolderToToolStripMenuItem.Name = "copyLocalFolderToToolStripMenuItem";
-            copyLocalFolderToToolStripMenuItem.Size = new Size(187, 22);
+            copyLocalFolderToToolStripMenuItem.Size = new Size(212, 22);
             copyLocalFolderToToolStripMenuItem.Text = "Copy local folder to...";
             copyLocalFolderToToolStripMenuItem.Click += copyLocalFolderToToolStripMenuItem_Click;
+            // 
+            // copyFolderToLocalFolderToolStripMenuItem
+            // 
+            copyFolderToLocalFolderToolStripMenuItem.Name = "copyFolderToLocalFolderToolStripMenuItem";
+            copyFolderToLocalFolderToolStripMenuItem.Size = new Size(212, 22);
+            copyFolderToLocalFolderToolStripMenuItem.Text = "Copy folder to local folder";
+            copyFolderToLocalFolderToolStripMenuItem.Click += copyFolderToLocalFolderToolStripMenuItem_Click;
+            // 
+            // deleteFolderToolStripMenuItem
+            // 
+            deleteFolderToolStripMenuItem.Name = "deleteFolderToolStripMenuItem";
+            deleteFolderToolStripMenuItem.Size = new Size(212, 22);
+            deleteFolderToolStripMenuItem.Text = "Delete folder";
+            deleteFolderToolStripMenuItem.Click += deleteFolderToolStripMenuItem_Click;
             // 
             // MainForm
             // 
@@ -130,6 +153,7 @@
             Controls.Add(statusStrip1);
             Controls.Add(toolStrip1);
             Name = "MainForm";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "CF Android Sync";
             Load += Form1_Load;
             toolStrip1.ResumeLayout(false);
@@ -155,5 +179,8 @@
         private ContextMenuStrip cmsFolder;
         private ToolStripMenuItem copyLocalFilesToFolderToolStripMenuItem;
         private ToolStripMenuItem copyLocalFolderToToolStripMenuItem;
+        private ToolStripMenuItem copyFolderToLocalFolderToolStripMenuItem;
+        private ToolStripLabel toolStripLabel1;
+        private ToolStripMenuItem deleteFolderToolStripMenuItem;
     }
 }

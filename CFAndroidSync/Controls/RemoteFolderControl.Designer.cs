@@ -1,6 +1,6 @@
 ﻿namespace CFAndroidSync.Controls
 {
-    partial class FolderControl
+    partial class RemoteFolderControl
     {
         /// <summary> 
         /// Required designer variable.

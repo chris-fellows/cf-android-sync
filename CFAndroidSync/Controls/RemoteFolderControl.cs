@@ -12,19 +12,23 @@ using System.Windows.Forms;
 
 namespace CFAndroidSync.Controls
 {    
-    public partial class FolderControl : UserControl
+    /// <summary>
+    /// Details of a single remote folder.
+    /// </summary>
+    public partial class RemoteFolderControl : UserControl
     {
-        private readonly IAndroidFileSystem _androidFileSystem;
-        public FolderControl()
+        private readonly IPhoneFileSystem _phoneFileSystem;
+
+        //public RemoteFolderControl()
+        //{
+        //    InitializeComponent();
+        //}
+
+        public RemoteFolderControl(IPhoneFileSystem phoneFileSystem)
         {
             InitializeComponent();
-        }
 
-        public FolderControl(IAndroidFileSystem androidFileSystem)
-        {
-            InitializeComponent();
-
-            _androidFileSystem = androidFileSystem;
+            _phoneFileSystem = phoneFileSystem;
         }
 
         public void ModelToView(FolderDetails folder)
@@ -33,12 +37,18 @@ namespace CFAndroidSync.Controls
             dgvItems.Columns.Clear();
 
             int columnIndex = dgvItems.Columns.Add("Name", "Name");
+            dgvItems.Columns[columnIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
 
-            var files = _androidFileSystem.GetFiles(folder.Path);
+            // Get files
+            var files = _phoneFileSystem.GetFiles(folder.Path);
+
+            // Display files
             foreach(var file in files)
             {                
                 dgvItems.Rows.Add(GetRow(file));
-            }            
+            }
+
+            dgvItems.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
         }
 
         private static DataGridViewRow GetRow(FileDetails file)

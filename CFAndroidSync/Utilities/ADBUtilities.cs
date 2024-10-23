@@ -51,8 +51,6 @@ namespace CFPlaylistManager.Utilities
             List<string> lines = new List<string>();
             Char quotes = '"';
 
-            // adb shell rm -r /sdcard/Music/Aerosmith
-
             // Copy files
             var localFiles = Directory.GetFiles(localFolder);
             foreach (var localFile in localFiles)
