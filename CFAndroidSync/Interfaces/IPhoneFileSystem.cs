@@ -8,6 +8,11 @@ namespace CFAndroidSync.Interfaces
     public interface IPhoneFileSystem
     {
         /// <summary>
+        /// Whether there's a connection to the phone
+        /// </summary>
+        bool IsConnected { get; }
+
+        /// <summary>
         /// Gets all folders that are children of folder
         /// </summary>
         /// <param name="folder"></param>

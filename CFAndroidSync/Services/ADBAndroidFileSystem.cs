@@ -1,4 +1,5 @@
-﻿using CFAndroidSync.Interfaces;
+﻿using CFAndroidSync.Exceptions;
+using CFAndroidSync.Interfaces;
 using CFAndroidSync.Models;
 using System.Diagnostics;
 
@@ -27,6 +28,36 @@ namespace CFAndroidSync.Services
             };
         }
 
+        public bool IsConnected
+        {
+            get
+            {
+                var isConnected = false;
+
+                using (var process = new Process())
+                {
+                    process.StartInfo = CreateProcessStartInfo($"devices");
+                    process.Start();
+                    process.WaitForExit();
+
+                    // Synchronously read the standard output of the spawned process.
+                    StreamReader readerOutput = process.StandardOutput;                                                          
+
+                    // Process output                    
+                    while (!readerOutput.EndOfStream)
+                    {
+                        var line = readerOutput.ReadLine(); 
+                        if (!line.Equals("List of devices attached") && line.Length > 0)
+                        {
+                            isConnected = true;
+                        }                        
+                    }
+                }
+
+                return isConnected;
+            }
+        }
+
         public List<FolderDetails> GetFolders(string folder)
         {
             var folders = new List<FolderDetails>();            
@@ -40,13 +71,19 @@ namespace CFAndroidSync.Services
                 // Synchronously read the standard output of the spawned process.
                 StreamReader readerOutput = process.StandardOutput;
                 StreamReader readerError = process.StandardError;
-                
+
                 // Process errors
+                var errorMessage = $"Error {process.ExitCode} getting folders";
                 while (!readerError.EndOfStream)
                 {
-                    var line = readerError.ReadLine();
+                    errorMessage = readerError.ReadLine();
                     //MessageBox.Show($"Error={line}");
                     int xxx1 = 1000;
+                }
+                
+                if (process.ExitCode != 0)
+                {
+                    throw new PhoneException(errorMessage);                    
                 }
 
                 // Process output
@@ -67,11 +104,8 @@ namespace CFAndroidSync.Services
                             Path =  folder == "/" ? $"{folder}{itemName}" : $"{folder}/{itemName}"
                         };
                         folders.Add(folderInfo);
-                    }
-                    int xxx2 = 1000;
+                    }                  
                 }
-                
-                int xxx = 1000;
             }
 
             return folders;
@@ -110,11 +144,17 @@ namespace CFAndroidSync.Services
                 StreamReader readerError = process.StandardError;
 
                 // Process errors
+                var errorMessage = $"Error {process.ExitCode} getting files";
                 while (!readerError.EndOfStream)
                 {
-                    var line = readerError.ReadLine();
-                    MessageBox.Show($"Error={line}");
+                    errorMessage = readerError.ReadLine();
+                    //MessageBox.Show($"Error={line}");
                     int xxx1 = 1000;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    throw new PhoneException(errorMessage);
                 }
 
                 // Process output
@@ -154,11 +194,17 @@ namespace CFAndroidSync.Services
                 StreamReader readerError = process.StandardError;
 
                 // Process errors
+                var errorMessage = $"Error {process.ExitCode} copying local file to";
                 while (!readerError.EndOfStream)
                 {
-                    var line = readerError.ReadLine();
-                    MessageBox.Show($"Error={line}");
+                    errorMessage = readerError.ReadLine();
+                    //MessageBox.Show($"Error={line}");
                     int xxx1 = 1000;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    throw new PhoneException(errorMessage);
                 }
 
                 // Process output
@@ -206,11 +252,17 @@ namespace CFAndroidSync.Services
                 StreamReader readerError = process.StandardError;
 
                 // Process errors
+                var errorMessage = $"Error {process.ExitCode} copying file from";
                 while (!readerError.EndOfStream)
                 {
-                    var line = readerError.ReadLine();
-                    MessageBox.Show($"Error={line}");
+                    errorMessage = readerError.ReadLine();
+                    //MessageBox.Show($"Error={line}");
                     int xxx1 = 1000;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    throw new PhoneException(errorMessage);
                 }
 
                 // Process output
@@ -257,11 +309,17 @@ namespace CFAndroidSync.Services
                 StreamReader readerError = process.StandardError;
 
                 // Process errors
+                var errorMessage = $"Error {process.ExitCode} deleting file";
                 while (!readerError.EndOfStream)
                 {
-                    var line = readerError.ReadLine();
-                    MessageBox.Show($"Error={line}");
+                    errorMessage = readerError.ReadLine();
+                    //MessageBox.Show($"Error={line}");
                     int xxx1 = 1000;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    throw new PhoneException(errorMessage);
                 }
 
                 // Process output
@@ -287,11 +345,17 @@ namespace CFAndroidSync.Services
                 StreamReader readerError = process.StandardError;
 
                 // Process errors
+                var errorMessage = $"Error {process.ExitCode} deleting folder";
                 while (!readerError.EndOfStream)
                 {
-                    var line = readerError.ReadLine();
-                    MessageBox.Show($"Error={line}");
+                    errorMessage = readerError.ReadLine();
+                    //MessageBox.Show($"Error={line}");
                     int xxx1 = 1000;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    throw new PhoneException(errorMessage);
                 }
 
                 // Process output

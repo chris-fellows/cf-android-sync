@@ -1,4 +1,5 @@
-﻿using CFAndroidSync.Interfaces;
+﻿using CFAndroidSync.Exceptions;
+using CFAndroidSync.Interfaces;
 using CFAndroidSync.Models;
 using System;
 using System.Collections.Generic;
@@ -40,17 +41,23 @@ namespace CFAndroidSync.Controls
             dgvItems.Columns[columnIndex].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
 
             // Get files
-            var files = _phoneFileSystem.GetFiles(folder.Path);
+            try
+            {
+                var files = _phoneFileSystem.GetFiles(folder.Path);
 
-            // Display files
-            foreach(var file in files)
-            {                
-                dgvItems.Rows.Add(GetRow(file));
+                // Display files
+                foreach (var file in files)
+                {
+                    dgvItems.Rows.Add(GetRow(file));
+                }
+
+                dgvItems.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
             }
-
-            dgvItems.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+            catch(PhoneException phoneException)
+            {
+                MessageBox.Show($"Error getting files: {phoneException.Message}", "Error", MessageBoxButtons.OK);
+            }
         }
-
         private static DataGridViewRow GetRow(FileDetails file)
         {
             DataGridViewRow row = new DataGridViewRow();

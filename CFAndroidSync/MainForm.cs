@@ -1,4 +1,5 @@
 using CFAndroidSync.Controls;
+using CFAndroidSync.Exceptions;
 using CFAndroidSync.Interfaces;
 using CFAndroidSync.Models;
 using CFAndroidSync.Services;
@@ -17,7 +18,7 @@ namespace CFAndroidSync
             FolderDetails,
         }
 
-        private readonly IPhoneFileSystem _phoneFileSystem;
+        private readonly IPhoneFileSystem _phoneFileSystem;        
 
         public MainForm()
         {
@@ -31,14 +32,8 @@ namespace CFAndroidSync
             DisplayStatus("Initialising");
 
             _phoneFileSystem = phoneFileSystem;
-
-            DisplayStatus("Ready");
-
-            // If no folders then phone may not be connected
-            if (tvwFileSystem.Nodes.Count == 0)
-            {
-                MessageBox.Show("Please ensure that the Android phone is properly connected", "Warning", MessageBoxButtons.OK);
-            }
+            
+            DisplayStatus("Ready");         
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -46,6 +41,13 @@ namespace CFAndroidSync
             tscCategory.Items.Clear();
             tscCategory.Items.Add("File system");
             tscCategory.SelectedIndex = 0;
+
+            // Warn if phone not connected
+            if (!_phoneFileSystem.IsConnected)
+            {
+                cmsFolder.Visible = false;  // Prevent folder context actions
+                MessageBox.Show("Please ensure that the Android phone is properly connected", "Warning", MessageBoxButtons.OK);
+            }
         }
 
         /// <summary>
@@ -54,11 +56,14 @@ namespace CFAndroidSync
         private void RefreshFileSystemTree()
         {
             DisplayStatus("Refreshing file system");
-
+            
             tvwFileSystem.Nodes.Clear();
-
+            
             // Display top level folders
-            DisplayFileSystemFolderInTree("/", tvwFileSystem, false);
+            DisplayFileSystemFolderInTree("/", tvwFileSystem, false, null);
+
+            // Expand top level folder nodes
+            tvwFileSystem.Nodes[0].Expand();
 
             DisplayStatus("Ready");
         }
@@ -73,36 +78,62 @@ namespace CFAndroidSync
         private void DisplayFileSystemFolderInTree(string folder, TreeView treeView, bool includeSubFolders,
                                            TreeNode parentFolderNode = null)
         {
-            var currentFolders = _phoneFileSystem.GetFolders(folder);
+            // If root then add parent node. Don't add context menu
+            if (parentFolderNode == null)
+            {                
+                var rootFolder = new FolderDetails()
+                {
+                    Name = "/",
+                    Path = "/"
+                };
+                var rootNode = tvwFileSystem.Nodes.Add(GetFileSystemNodeKey(rootFolder), rootFolder.Name);
+                rootNode.Tag = rootFolder;
+                parentFolderNode = rootNode;
+            }
 
-            foreach (var currentFolder in currentFolders)
+            // Get folders, handle errors (E.g. Permissions error
+            List<FolderDetails> currentFolders = new List<FolderDetails>();
+            try
             {
-                TreeNode nodeFolder = null;
-                var folderKey = GetFileSystemNodeKey(currentFolder);
-                if (parentFolderNode == null)
-                {
-                    nodeFolder = treeView.Nodes.Add(folderKey, currentFolder.Name);
-                }
-                else
-                {
-                    nodeFolder = parentFolderNode.Nodes.Add(folderKey, currentFolder.Name);
-                }
-                nodeFolder.Tag = currentFolder;
-                nodeFolder.ContextMenuStrip = cmsFolder;
 
-                // Process sub-folders
-                if (includeSubFolders)
+                currentFolders = _phoneFileSystem.GetFolders(folder);
+            }
+            catch(PhoneException phoneException)   // Permission denied?
+            {                
+                parentFolderNode.Text += $" [Error: {phoneException.Message}]";                
+            }
+
+            if (currentFolders != null)   // Got folders
+            {
+                // Add folder nodes to parent
+                foreach (var currentFolder in currentFolders)
                 {
-                    DisplayFileSystemFolderInTree(currentFolder.Path, treeView, includeSubFolders, nodeFolder);
-                }
-                else
-                {
-                    // Check if sub-folders and add a dummy node so that we can populate the sub-folders when the user
-                    // expands the node. This is more efficient then displaying the whole Android file system.
-                    var subFolders = _phoneFileSystem.GetFolders(currentFolder.Path);
-                    if (subFolders.Any())
+                    // Add folder node
+                    TreeNode nodeFolder = parentFolderNode.Nodes.Add(GetFileSystemNodeKey(currentFolder), currentFolder.Name);
+                    nodeFolder.Tag = currentFolder;
+                    nodeFolder.ContextMenuStrip = cmsFolder;
+                    
+                    // Process sub-folders
+                    if (includeSubFolders)
                     {
-                        var nodeDummy = nodeFolder.Nodes.Add("Dummy");
+                        DisplayFileSystemFolderInTree(currentFolder.Path, treeView, includeSubFolders, nodeFolder);
+                    }
+                    else
+                    {
+                        // Check if sub-folders and add a dummy node so that we can populate the sub-folders when the user
+                        // expands the node. This is more efficient then displaying the whole Android file system.
+                        try
+                        {
+                            var subFolders = _phoneFileSystem.GetFolders(currentFolder.Path);
+                            if (subFolders.Any())
+                            {
+                                var nodeDummy = nodeFolder.Nodes.Add("Dummy");
+                            }
+                        }
+                        catch (PhoneException phoneException)    // Permission denied?
+                        {                          
+                            nodeFolder.Text += $" [Error: {phoneException.Message}]";                           
+                        }
                     }
                 }
             }
@@ -212,6 +243,7 @@ namespace CFAndroidSync
 
         private void tvwFileSystem_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
+            // If node contains dummy node then read replace with nodes for sub-folders
             if (e.Node != null &&
                 e.Node.Nodes.Count > 0 &&
                 e.Node.Nodes[0].Text.Equals("Dummy"))
@@ -219,7 +251,7 @@ namespace CFAndroidSync
                 // Clear dummy node                
                 e.Node.Nodes.Clear();
 
-                DisplayStatus("Refreshing folders");
+                DisplayStatus("Reading folder");
 
                 // Display folder
                 FolderDetails folder = (FolderDetails)e.Node.Tag;
@@ -235,16 +267,16 @@ namespace CFAndroidSync
 
             if (e.Node.Tag is FolderDetails)
             {
-                DisplayStatus("Displaying files");
-
                 var folder = (FolderDetails)e.Node.Tag;
 
-                var folderControl = new RemoteFolderControl(_phoneFileSystem);
-                folderControl.Dock = DockStyle.Fill;
-                folderControl.ModelToView(folder);
-                splitContainer1.Panel2.Controls.Add(folderControl);
+                    DisplayStatus("Displaying files");
+                    
+                    var folderControl = new RemoteFolderControl(_phoneFileSystem);
+                    folderControl.Dock = DockStyle.Fill;
+                    folderControl.ModelToView(folder);
+                    splitContainer1.Panel2.Controls.Add(folderControl);
 
-                DisplayStatus("Ready");
+                    DisplayStatus("Ready");
             }
         }
 
