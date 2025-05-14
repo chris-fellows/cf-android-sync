@@ -5,12 +5,15 @@ using CFAndroidSync.Models;
 using CFAndroidSync.Services;
 using CFPlaylistManager.Utilities;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace CFAndroidSync
 {
     public partial class MainForm : Form
     {
+        //private PhoneConnection _phoneConnection;
+
         private enum MyNodeTypes
         {
             Unknown,
@@ -18,7 +21,7 @@ namespace CFAndroidSync
             FolderDetails,
         }
 
-        private readonly IPhoneFileSystem _phoneFileSystem;        
+        private readonly IPhoneFileSystem _phoneFileSystem;
 
         public MainForm()
         {
@@ -29,15 +32,20 @@ namespace CFAndroidSync
         {
             InitializeComponent();
 
+            //CopySelectedFolderToFileSystem("C:\\Temp\\RadioStreamsGB", "/sdcard/Music/RadioStreams");
+
             DisplayStatus("Initialising");
 
             _phoneFileSystem = phoneFileSystem;
-            
-            DisplayStatus("Ready");         
+
+            DisplayStatus("Ready");
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            //_phoneConnection = new PhoneConnection();
+            //_phoneConnection.Start();
+            
             tscCategory.Items.Clear();
             tscCategory.Items.Add("File system");
             tscCategory.SelectedIndex = 0;
@@ -56,9 +64,9 @@ namespace CFAndroidSync
         private void RefreshFileSystemTree()
         {
             DisplayStatus("Refreshing file system");
-            
+
             tvwFileSystem.Nodes.Clear();
-            
+
             // Display top level folders
             DisplayFileSystemFolderInTree("/", tvwFileSystem, false, null);
 
@@ -80,7 +88,7 @@ namespace CFAndroidSync
         {
             // If root then add parent node. Don't add context menu
             if (parentFolderNode == null)
-            {                
+            {
                 var rootFolder = new FolderDetails()
                 {
                     Name = "/",
@@ -98,9 +106,9 @@ namespace CFAndroidSync
 
                 currentFolders = _phoneFileSystem.GetFolders(folder);
             }
-            catch(PhoneException phoneException)   // Permission denied?
-            {                
-                parentFolderNode.Text += $" [Error: {phoneException.Message}]";                
+            catch (PhoneException phoneException)   // Permission denied?
+            {
+                parentFolderNode.Text += $" [Error: {phoneException.Message}]";
             }
 
             if (currentFolders != null)   // Got folders
@@ -112,7 +120,7 @@ namespace CFAndroidSync
                     TreeNode nodeFolder = parentFolderNode.Nodes.Add(GetFileSystemNodeKey(currentFolder), currentFolder.Name);
                     nodeFolder.Tag = currentFolder;
                     nodeFolder.ContextMenuStrip = cmsFolder;
-                    
+
                     // Process sub-folders
                     if (includeSubFolders)
                     {
@@ -131,8 +139,8 @@ namespace CFAndroidSync
                             }
                         }
                         catch (PhoneException phoneException)    // Permission denied?
-                        {                          
-                            nodeFolder.Text += $" [Error: {phoneException.Message}]";                           
+                        {
+                            nodeFolder.Text += $" [Error: {phoneException.Message}]";
                         }
                     }
                 }
@@ -269,14 +277,14 @@ namespace CFAndroidSync
             {
                 var folder = (FolderDetails)e.Node.Tag;
 
-                    DisplayStatus("Displaying files");
-                    
-                    var folderControl = new RemoteFolderControl(_phoneFileSystem);
-                    folderControl.Dock = DockStyle.Fill;
-                    folderControl.ModelToView(folder);
-                    splitContainer1.Panel2.Controls.Add(folderControl);
+                DisplayStatus("Displaying files");
 
-                    DisplayStatus("Ready");
+                var folderControl = new RemoteFolderControl(_phoneFileSystem);
+                folderControl.Dock = DockStyle.Fill;
+                folderControl.ModelToView(folder);
+                splitContainer1.Panel2.Controls.Add(folderControl);
+
+                DisplayStatus("Ready");
             }
         }
 
@@ -402,12 +410,12 @@ namespace CFAndroidSync
 
         private void deleteFolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FolderDetails folder = (FolderDetails)tvwFileSystem.SelectedNode.Tag;            
+            FolderDetails folder = (FolderDetails)tvwFileSystem.SelectedNode.Tag;
 
             if (MessageBox.Show($"Delete remote folder {folder.Path}?", "Delete Remote Folder", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 DisplayStatus("Deleting remote folder...");
-                _phoneFileSystem.DeleteFolder(folder.Path);                
+                _phoneFileSystem.DeleteFolder(folder.Path);
                 DisplayStatus("Ready");
 
                 MessageBox.Show("Folder deleted", "Delete Remote Folder");
@@ -450,7 +458,7 @@ namespace CFAndroidSync
 
             if (currentNode == null)
             {
-                foreach(TreeNode node in tvwFileSystem.Nodes)
+                foreach (TreeNode node in tvwFileSystem.Nodes)
                 {
                     var nodeFound = GetFileSystemTreeNode(folder, node);
                     if (nodeFound != null) return nodeFound;
@@ -474,6 +482,16 @@ namespace CFAndroidSync
             }
 
             return null;
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            //CFConnectionMessaging.Common.ConnectionTest connectionTest = new Common.ConnectionTest();
+            ////connectionTest.TestByteArraySplit();
+            ////connectionTest.TestOneMessageInMultiplePackets();
+            //connectionTest.TestMultipleMessagesInMultiplePackets();
+
+            int xxx = 1000;
         }
     }
 }

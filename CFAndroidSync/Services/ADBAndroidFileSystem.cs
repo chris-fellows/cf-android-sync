@@ -2,6 +2,7 @@
 using CFAndroidSync.Interfaces;
 using CFAndroidSync.Models;
 using System.Diagnostics;
+using System.Text;
 
 namespace CFAndroidSync.Services
 {
@@ -192,6 +193,12 @@ namespace CFAndroidSync.Services
                 // Synchronously read the standard output of the spawned process.
                 StreamReader readerOutput = process.StandardOutput;
                 StreamReader readerError = process.StandardError;
+
+                StringBuilder output = new StringBuilder("");
+                while (!readerOutput.EndOfStream)
+                {
+                    output.AppendLine(readerOutput.ReadLine());
+                }
 
                 // Process errors
                 var errorMessage = $"Error {process.ExitCode} copying local file to";

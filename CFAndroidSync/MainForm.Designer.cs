@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             toolStrip1 = new ToolStrip();
             toolStripLabel1 = new ToolStripLabel();
             tscCategory = new ToolStripComboBox();
@@ -41,6 +42,7 @@
             copyLocalFolderToToolStripMenuItem = new ToolStripMenuItem();
             copyFolderToLocalFolderToolStripMenuItem = new ToolStripMenuItem();
             deleteFolderToolStripMenuItem = new ToolStripMenuItem();
+            toolStripButton1 = new ToolStripButton();
             toolStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
@@ -51,7 +53,7 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel1, tscCategory });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel1, tscCategory, toolStripButton1 });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(1245, 25);
@@ -114,7 +116,7 @@
             // 
             cmsFolder.Items.AddRange(new ToolStripItem[] { copyLocalFilesToFolderToolStripMenuItem, copyLocalFolderToToolStripMenuItem, copyFolderToLocalFolderToolStripMenuItem, deleteFolderToolStripMenuItem });
             cmsFolder.Name = "cmsFolder";
-            cmsFolder.Size = new Size(213, 114);
+            cmsFolder.Size = new Size(213, 92);
             // 
             // copyLocalFilesToFolderToolStripMenuItem
             // 
@@ -143,6 +145,16 @@
             deleteFolderToolStripMenuItem.Size = new Size(212, 22);
             deleteFolderToolStripMenuItem.Text = "Delete folder";
             deleteFolderToolStripMenuItem.Click += deleteFolderToolStripMenuItem_Click;
+            // 
+            // toolStripButton1
+            // 
+            toolStripButton1.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            toolStripButton1.Image = (Image)resources.GetObject("toolStripButton1.Image");
+            toolStripButton1.ImageTransparentColor = Color.Magenta;
+            toolStripButton1.Name = "toolStripButton1";
+            toolStripButton1.Size = new Size(23, 22);
+            toolStripButton1.Text = "toolStripButton1";
+            toolStripButton1.Click += toolStripButton1_Click;
             // 
             // MainForm
             // 
@@ -182,5 +194,6 @@
         private ToolStripMenuItem copyFolderToLocalFolderToolStripMenuItem;
         private ToolStripLabel toolStripLabel1;
         private ToolStripMenuItem deleteFolderToolStripMenuItem;
+        private ToolStripButton toolStripButton1;
     }
 }
